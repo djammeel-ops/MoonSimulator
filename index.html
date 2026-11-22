@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>محاكي الشمس والأرض والقمر</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="top" class="pnl">
+<button data-m="1" class="on">النظام الفضائي</button><button data-m="2">منظور الأرض</button><button data-m="3">التفسير العلمي</button>
+</div>
+<div id="info" class="pnl"><div><span>اليوم</span><b id="iD"></b></div></div>
+<div id="mw" class="pnl"><canvas id="mc" width="192" height="192"></canvas>منظر القمر</div>
+<div id="cap" class="pnl"></div>
+<div id="lt" class="pnl"><h3><span>الإضاءة</span><button id="ltR">إعادة الضبط</button></h3>
+<label>سطوع الشمس<input type="range" id="lS" min="0" max="100" value="70"><b></b></label>
+<label>سطوع الأرض<input type="range" id="lE" min="0" max="100" value="70"><b></b></label>
+<label>سطوع القمر<input type="range" id="lM" min="0" max="100" value="70"><b></b></label>
+<label>الإضاءة المحيطية<input type="range" id="lA" min="0" max="100" value="25"><b></b></label></div>
+<div id="bar" class="pnl"><div id="strip"></div>
+<input id="sl" type="range" min="0" max="2953" value="0" aria-label="اليوم من الشهر القمري">
+<div class="row"><button id="bPlay">▶ تشغيل</button><button id="bStop">⏸ إيقاف</button><button id="bRst">↺ البداية</button><button id="bLt">💡 الإضاءة</button></div>
+<div class="row"><button id="bSlow">أبطأ</button><div id="sp"></div><button id="bFast">أسرع</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="app.js"></script>
+</body></html>
