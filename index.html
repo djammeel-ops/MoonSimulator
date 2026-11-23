@@ -1,28 +1,207 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>محاكي الشمس والأرض والقمر</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>محاكي الشمس والأرض والقمر المتقدم | Lunar & Solar Eclipse Simulator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="top" class="pnl">
-<button data-m="1" class="on">النظام الفضائي</button><button data-m="2">منظور الأرض</button><button data-m="3">التفسير العلمي</button>
-</div>
-<div id="info" class="pnl"><div><span>اليوم</span><b id="iD"></b></div></div>
-<div id="mw" class="pnl"><canvas id="mc" width="192" height="192"></canvas>منظر القمر</div>
-<div id="cap" class="pnl"></div>
-<div id="lt" class="pnl"><h3><span>الإضاءة</span><button id="ltR">إعادة الضبط</button></h3>
-<label>سطوع الشمس<input type="range" id="lS" min="0" max="100" value="70"><b></b></label>
-<label>سطوع الأرض<input type="range" id="lE" min="0" max="100" value="70"><b></b></label>
-<label>سطوع القمر<input type="range" id="lM" min="0" max="100" value="70"><b></b></label>
-<label>الإضاءة المحيطية<input type="range" id="lA" min="0" max="100" value="25"><b></b></label></div>
-<div id="bar" class="pnl"><div id="strip"></div>
-<input id="sl" type="range" min="0" max="2953" value="0" aria-label="اليوم من الشهر القمري">
-<div class="row"><button id="bPlay">▶ تشغيل</button><button id="bStop">⏸ إيقاف</button><button id="bRst">↺ البداية</button><button id="bLt">💡 الإضاءة</button></div>
-<div class="row"><button id="bSlow">أبطأ</button><div id="sp"></div><button id="bFast">أسرع</button></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="app.js"></script>
-</body></html>
+  <!-- Three.js Canvas -->
+  <canvas id="c"></canvas>
+
+  <!-- Top Mode Switcher -->
+  <header id="top" class="pnl">
+    <button data-m="1" class="mode-btn on" title="عرض المنظومة الشمسية والأرض والقمر بحرية">
+      <span class="icon">🌌</span><span class="label">النظام الفضائي</span>
+    </button>
+    <button data-m="2" class="mode-btn" title="منظور راصد من سطح الأرض">
+      <span class="icon">🔭</span><span class="label">منظور الأرض</span>
+    </button>
+    <button data-m="3" class="mode-btn" title="عرض علوي هندسي يفسر آلية أطوار القمر">
+      <span class="icon">📐</span><span class="label">التفسير العلمي</span>
+    </button>
+    <button data-m="4" class="mode-btn" title="محاكاة دقيقة لحالات كسوف الشمس وخسوف القمر">
+      <span class="icon">🌘</span><span class="label">مختبر الكسوف</span>
+    </button>
+  </header>
+
+  <!-- Left: 2D Moon Preview Widget -->
+  <aside id="mw" class="pnl">
+    <div class="mw-head">
+      <span class="mw-title">رؤية القمر</span>
+      <span id="mwHemiBadge" class="badge">شمالي</span>
+    </div>
+    <canvas id="mc" width="192" height="192"></canvas>
+    <div id="mwPhaseName" class="mw-phase">المحاق</div>
+    <div id="mwIllum" class="mw-illum">0% مضاء</div>
+  </aside>
+
+  <!-- Right: Astronomical Info Panel -->
+  <aside id="info" class="pnl">
+    <div class="info-row">
+      <span>طور القمر:</span>
+      <b id="iPhase">المحاق</b>
+    </div>
+    <div class="info-row">
+      <span>اليوم القمري:</span>
+      <b id="iD">1.0 / 29.5 يوم</b>
+    </div>
+    <div class="info-row">
+      <span>نسبة الإضاءة:</span>
+      <b id="iIllum">0%</b>
+    </div>
+    <div class="info-row">
+      <span>الليلة التراثية:</span>
+      <b id="iTrad">ليلة السَّرَر / المحاق</b>
+    </div>
+    <div class="info-row">
+      <span>رؤية الهلال:</span>
+      <b id="iCresStatus" class="status-badge">مستحيلة (محاق)</b>
+    </div>
+    <div id="eclipseBanner" class="eclipse-banner hidden">
+      <span class="blink-dot"></span>
+      <span id="eclipseText">حدث فلكي نشط</span>
+    </div>
+  </aside>
+
+  <!-- Caption bar -->
+  <div id="cap" class="pnl"></div>
+
+  <!-- Settings Drawer / Modal (Options, Lighting, Location, Guides) -->
+  <div id="drawer" class="pnl drawer">
+    <div class="drawer-header">
+      <h3 id="drawerTitle">إعدادات المحاكاة والفيزياء</h3>
+      <button id="bCloseDrawer" class="icon-btn">✕</button>
+    </div>
+    <div class="drawer-body">
+      <!-- Section: Location & Hemisphere -->
+      <div class="cfg-group">
+        <label class="cfg-title">📍 موقع الراصد على الأرض (تأثير شكل الهلال):</label>
+        <div class="btn-grid" id="locBtns">
+          <button class="sub-btn on" data-lat="21.4" data-name="مكة المكرمة (21.4°N)">مكة المكرمة</button>
+          <button class="sub-btn" data-lat="30.0" data-name="القاهرة (30°N)">القاهرة</button>
+          <button class="sub-btn" data-lat="0.0" data-name="خط الاستواء (0°)">خط الاستواء</button>
+          <button class="sub-btn" data-lat="-33.8" data-name="سيدني (33.8°S)">سيدني (نصف جنوبي)</button>
+        </div>
+        <small class="cfg-hint">في النصف الجنوبي يبدو الهلال مقلوباً أفقياً، وعند خط الاستواء يبدو مستوياً كالزورق!</small>
+      </div>
+
+      <!-- Section: Celestial Mechanics & Toggles -->
+      <div class="cfg-group">
+        <label class="cfg-title">⚙️ الضوابط الفلكية:</label>
+        <div class="toggle-list">
+          <label class="switch-row">
+            <span>ميلان مدار القمر (5.14°):</span>
+            <input type="checkbox" id="chkInclination" checked>
+          </label>
+          <label class="switch-row">
+            <span>مخاريط الظل (ظلال الأرض والقمر):</span>
+            <input type="checkbox" id="chkShadows" checked>
+          </label>
+          <label class="switch-row">
+            <span>الميسان القمري (تمايل تضاريس القمر):</span>
+            <input type="checkbox" id="chkLibration" checked>
+          </label>
+          <label class="switch-row">
+            <span>أضواء المدن ليلاً والغلاف الجوي:</span>
+            <input type="checkbox" id="chkAtmosphere" checked>
+          </label>
+          <label class="switch-row">
+            <span>تسميات معالم القمر (البحار والفوهات):</span>
+            <input type="checkbox" id="chkLabels" checked>
+          </label>
+          <label class="switch-row">
+            <span>مقياس المسافات الواقعي:</span>
+            <input type="checkbox" id="chkRealScale">
+          </label>
+        </div>
+      </div>
+
+      <!-- Section: Lighting -->
+      <div class="cfg-group">
+        <div class="cfg-title-row">
+          <label class="cfg-title">💡 لوحة الإضاءة:</label>
+          <button id="ltR" class="text-btn">استعادة الافتراضي</button>
+        </div>
+        <div class="slider-grid">
+          <label>سطوع الشمس<input type="range" id="lS" min="0" max="100" value="80"><b>80%</b></label>
+          <label>سطوع الأرض<input type="range" id="lE" min="0" max="100" value="75"><b>75%</b></label>
+          <label>سطوع القمر<input type="range" id="lM" min="0" max="100" value="75"><b>75%</b></label>
+          <label>الإضاءة المحيطية<input type="range" id="lA" min="0" max="100" value="25"><b>25%</b></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Guide Modal -->
+  <div id="guideModal" class="pnl modal hidden">
+    <div class="modal-header">
+      <h3>📚 الدليل العلمي المبسط: كيف تعمل المنظومة؟</h3>
+      <button id="bCloseGuide" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="guide-card">
+        <h4>1. لماذا تتغير أطوار القمر؟</h4>
+        <p>نصف القمر مواجه للشمس دائماً ويكون نهاراً مشرقاً، بينما النصف الآخر ليل مظلم. مع دوران القمر حول الأرض شهرياً، تتغير زاوية رؤيتنا من الأرض للنصف المضاء، فنرى جزءاً منه يكبر (هلال ثم تربيع ثم أحدب ثم بدر) ثم يتناقص.</p>
+      </div>
+      <div class="guide-card">
+        <h4>2. لماذا لا يحدث كسوف وخسوف كل شهر؟</h4>
+        <p>لأن مستوى مدار القمر مائل بزاوية تقارب <strong>5.14 درجات</strong> بالنسبة لمستوى دوران الأرض حول الشمس (الكسوف). لذلك يمر القمر في أغلب الشهور إما أعلى أو أسفل ظل الأرض، ولا يقع الكسوف والخسوف إلا عندما يتقاطع القمر مع نقطتي العقدتين (العقدة الصاعدة أو الهابطة).</p>
+      </div>
+      <div class="guide-card">
+        <h4>3. ما هو القمر الدموي (Blood Moon)؟</h4>
+        <p>أثناء الخسوف الكلي للقمر، يدخل القمر تماماً في مخروط ظل الأرض (Umbra). لكنه لا يختفي كلياً، بل يتوهج بلون أحمر نحاسي نتيجة تشتت أشعة الشمس وانكسار أطوال الموجات الحمراء عبر الغلاف الجوي للأرض وسقوطها على القمر.</p>
+      </div>
+      <div class="guide-card">
+        <h4>4. أطوار القمر في الثقافة العربية والتقويم الهجري:</h4>
+        <p>يبدأ الشهر القمري برؤية "الهلال" بعد المحاق. وسمّى العرب ليالي منتصف الشهر (13، 14، 15) بـ "الأيام البيض" لسطوع ضوء البدر فيها طوال الليل.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Timeline & Action Bar -->
+  <footer id="bar" class="pnl">
+    <!-- Phase Jump Strip -->
+    <div id="strip" title="انقر على أي طور للانتقال إليه مباشرة"></div>
+
+    <!-- Timeline Slider -->
+    <div class="slider-wrapper">
+      <input id="sl" type="range" min="0" max="2953" value="0" aria-label="اليوم من الشهر القمري">
+      <div class="time-ticks">
+        <span>0 (محاق)</span>
+        <span>7.4 (تربيع 1)</span>
+        <span>14.8 (بدر)</span>
+        <span>22.1 (تربيع 2)</span>
+        <span>29.5 (نهاية الشهر)</span>
+      </div>
+    </div>
+
+    <!-- Control Rows -->
+    <div class="ctrl-row main-ctrls">
+      <button id="bPlay" class="act-btn">▶ تشغيل</button>
+      <button id="bStop" class="act-btn">⏸ إيقاف</button>
+      <button id="bRst" class="act-btn">↺ أول الشهر</button>
+      <button id="bNextEclipse" class="act-btn highlight" title="القفز إلى موعد الكسوف أو الخسوف التالي">⚡ قفز لحدث فلكي</button>
+      <button id="bSettings" class="act-btn">⚙️ الإعدادات</button>
+      <button id="bGuide" class="act-btn">📖 الشرح العلمي</button>
+    </div>
+
+    <div class="ctrl-row sub-ctrls">
+      <button id="bSlow" class="speed-btn" title="إبطاء الحركة">◀ أبطأ</button>
+      <div id="sp" class="speed-display">1 يوم / ثانية</div>
+      <button id="bFast" class="speed-btn" title="تسريع الحركة">أسرع ▶</button>
+      <button id="bHemiToggle" class="pill-btn" title="تبديل نصف الكرة">📍 النصف الشمالي</button>
+      <button id="bScaleToggle" class="pill-btn" title="تبديل بين المقياس الواقعي والتعليمي">📏 مقياس توضيحي</button>
+    </div>
+  </footer>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
